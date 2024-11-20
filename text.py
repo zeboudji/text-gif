@@ -2,8 +2,6 @@ import streamlit as st
 import random
 import re
 import time
-from collections import defaultdict
-import matplotlib.pyplot as plt
 
 # 1. Configurer la page (doit être le premier appel Streamlit)
 st.set_page_config(page_title="Simulation IA : Choix Pondéré", layout="wide")
@@ -20,26 +18,16 @@ st.markdown("""
         width: 100%;
     }
 
-    /* Phrase animée avec effet de fondu */
-    .animated-text {
-        font-size: 2em;
+    /* Étapes de réflexion */
+    .step {
+        font-size: 1.5em;
         color: #ffffff;
-        transition: all 0.5s ease-in-out;
-        text-align: center;
-        word-wrap: break-word;
-        animation: fadeIn 0.5s ease-in-out;
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-
-    /* Options et probabilités */
-    .probabilities {
-        font-size: 1.2em;
-        color: #87CEFA;
+        background-color: #2F4F4F;
+        padding: 15px;
+        border-radius: 10px;
         margin-top: 20px;
+        width: 80%;
+        transition: all 0.5s ease-in-out;
     }
 
     /* Texte final */
@@ -52,11 +40,9 @@ st.markdown("""
 
     /* Responsive design */
     @media (max-width: 768px) {
-        .animated-text {
-            font-size: 1.5em;
-        }
-        .probabilities {
-            font-size: 1em;
+        .step {
+            font-size: 1.2em;
+            width: 95%;
         }
         .final-text {
             font-size: 2em;
@@ -65,87 +51,71 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 3. Fonction pour afficher les probabilités sous forme de graphique
-def display_probabilities(options):
-    labels = [opt['word'] for opt in options]
-    sizes = [opt['probability'] for opt in options]
-    colors = ['#FFA500', '#87CEFA', '#32CD32', '#FF6347', '#FFD700', '#9370DB', '#40E0D0', '#FF69B4', '#CD5C5C', '#F08080']
-    
-    fig, ax = plt.subplots()
-    ax.pie(sizes, labels=labels, colors=colors[:len(labels)], autopct='%1.1f%%', startangle=140)
-    ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-    st.pyplot(fig)
-
-# 4. Fonction pour simuler l'animation dans Streamlit
-def simulate_animation(sentence, options, selected_word, scale_factor=1):
+# 3. Fonction pour simuler l'animation des étapes de réflexion de l'IA
+def simulate_reflection(sentence, options, selected_word):
     prob_weights = [opt["probability"] for opt in options]
     prob_texts = [f"{opt['word']} : {opt['probability']}%" for opt in options]
     
-    # Créer des placeholders pour l'animation
-    sentence_placeholder = st.empty()
-    probs_placeholder = st.empty()
+    # Créer des placeholders pour les étapes
+    step1_placeholder = st.empty()
+    step2_placeholder = st.empty()
+    step3_placeholder = st.empty()
+    step4_placeholder = st.empty()
     final_placeholder = st.empty()
     
-    # Animation aléatoire
-    for _ in range(20):
-        chosen_option = random.choices(options, weights=prob_weights, k=1)[0]
-        random_word = chosen_option["word"]
-        random_prob = chosen_option["probability"]
-        
-        # Créer la phrase animée avec des styles HTML
-        animated_sentence = sentence.replace(
-            selected_word, f"<span style='color:#FFA500;'>[{random_word} ({random_prob}%)]</span>"
-        )
-        
-        # Afficher la phrase animée avec une taille de police agrandie et centrée
-        sentence_html = f"<div class='animated-text'>{animated_sentence}</div>"
-        sentence_placeholder.markdown(sentence_html, unsafe_allow_html=True)
-        
-        # Afficher les probabilités des options sous forme de graphique
-        probs_html = "<div class='probabilities'>Options et Probabilités :</div>"
-        display_probabilities(options)
-        
-        time.sleep(0.3)  # Pause de 300 ms entre les frames
-    
-    # Afficher le résultat final
-    final_option = max(options, key=lambda x: x["probability"])
-    final_word = final_option["word"]
-    final_prob = final_option["probability"]
-    final_sentence = sentence.replace(
-        selected_word, f"<span style='color:#32CD32;'>[{final_word} ({final_prob}%)]</span>"
-    )
-    final_text = f"Le mot choisi est : <strong>{final_word} ({final_prob}%)</strong> ! 🎉"
-    
-    # Afficher la phrase finale
-    final_sentence_html = f"<div class='animated-text'>{final_sentence}</div>"
-    sentence_placeholder.markdown(final_sentence_html, unsafe_allow_html=True)
-    
-    # Afficher le texte final
-    final_text_html = f"<div class='final-text'>{final_text}</div>"
+    # Étape 1 : Analyse des options
+    step1_html = f"""
+    <div class='step'>
+        <strong>Étape 1 : Analyse des Options</strong><br>
+        L'IA analyse les options disponibles pour remplacer le mot <em><strong>{selected_word}</strong></em> dans la phrase.
+    </div>
+    """
+    step1_placeholder.markdown(step1_html, unsafe_allow_html=True)
+    time.sleep(2)  # Pause de 2 secondes
+
+    # Étape 2 : Évaluation des Probabilités
+    step2_html = f"""
+    <div class='step'>
+        <strong>Étape 2 : Évaluation des Probabilités</strong><br>
+        Chaque option se voit attribuer une probabilité de sélection basée sur son importance ou sa pertinence.
+    </div>
+    """
+    step2_placeholder.markdown(step2_html, unsafe_allow_html=True)
+    time.sleep(2)  # Pause de 2 secondes
+
+    # Étape 3 : Comparaison des Options
+    step3_html = f"""
+    <div class='step'>
+        <strong>Étape 3 : Comparaison des Options</strong><br>
+        L'IA compare les probabilités attribuées à chaque option pour déterminer laquelle a le plus de chances d'être sélectionnée.
+    </div>
+    """
+    step3_placeholder.markdown(step3_html, unsafe_allow_html=True)
+    time.sleep(2)  # Pause de 2 secondes
+
+    # Étape 4 : Prise de Décision
+    chosen_option = random.choices(options, weights=prob_weights, k=1)[0]
+    step4_html = f"""
+    <div class='step'>
+        <strong>Étape 4 : Prise de Décision</strong><br>
+        Basé sur les probabilités, l'IA sélectionne l'option <em><strong>{chosen_option['word']}</strong></em> avec une probabilité de <strong>{chosen_option['probability']}%</strong>.
+    </div>
+    """
+    step4_placeholder.markdown(step4_html, unsafe_allow_html=True)
+    time.sleep(2)  # Pause de 2 secondes
+
+    # Résultat Final
+    final_sentence = sentence.replace(selected_word, f"<strong>{chosen_option['word']}</strong>")
+    final_text_html = f"""
+    <div class='final-text'>
+        🎉 **Résultat Final :**<br>
+        La phrase finale est : <br>
+        <em>{final_sentence}</em>
+    </div>
+    """
     final_placeholder.markdown(final_text_html, unsafe_allow_html=True)
 
-# 5. Fonction pour exécuter des simulations multiples et afficher les résultats
-def run_simulations(sentence, options, selected_word, num_simulations=100):
-    results = defaultdict(int)
-    prob_weights = [opt["probability"] for opt in options]
-    
-    for _ in range(num_simulations):
-        chosen_option = random.choices(options, weights=prob_weights, k=1)[0]
-        results[chosen_option['word']] += 1
-    
-    # Afficher les résultats sous forme de graphique à barres
-    labels = list(results.keys())
-    sizes = list(results.values())
-    colors = ['#FFA500', '#87CEFA', '#32CD32', '#FF6347', '#FFD700', '#9370DB', '#40E0D0', '#FF69B4', '#CD5C5C', '#F08080']
-    
-    fig, ax = plt.subplots()
-    ax.bar(labels, sizes, color=colors[:len(labels)])
-    ax.set_xlabel('Options')
-    ax.set_ylabel('Nombre de Sélections')
-    ax.set_title(f'Resultats des Simulations ({num_simulations} Choix)')
-    st.pyplot(fig)
-
-# 6. Interface utilisateur Streamlit
+# 4. Interface utilisateur Streamlit
 st.title("🧠 Simulation IA : Choix Pondéré avec Contexte")
 st.markdown("""
 ### 📚 Introduction à l'IA et aux Probabilités Pondérées
@@ -198,12 +168,8 @@ if sentence:
                 if st.button("🚀 Générer l'animation"):
                     with st.spinner("Génération de l'animation en cours..."):
                         try:
-                            simulate_animation(sentence, options, selected_word, scale_factor=1)
+                            simulate_reflection(sentence, options, selected_word)
                             st.success("🎉 Animation terminée !")
-                            
-                            # Optionnel : Lancer des simulations multiples pour démontrer les résultats statistiques
-                            if st.checkbox("📊 Voir les résultats des simulations multiples (100 choix)"):
-                                run_simulations(sentence, options, selected_word, num_simulations=100)
                         except Exception as e:
                             st.error(f"⚠️ Une erreur s'est produite lors de l'animation : {e}")
         else:

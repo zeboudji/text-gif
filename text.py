@@ -5,29 +5,35 @@ import re
 import os
 from io import BytesIO
 
-# Fonction pour charger une police TTF personnalisée ou une police par défaut
+# Fonction pour charger une police TTF intégrée ou une police par défaut
 def load_font(font_size):
     try:
-        # Utiliser une police système courante comme Arial
-        return ImageFont.truetype("arial.ttf", font_size)
+        # DejaVuSans-Bold est généralement disponible avec Pillow
+        return ImageFont.truetype("DejaVuSans-Bold.ttf", font_size)
     except IOError:
-        # Fallback à la police par défaut si Arial n'est pas disponible
+        # Fallback à la police par défaut si DejaVuSans-Bold n'est pas disponible
+        st.error("Police DejaVuSans-Bold.ttf non trouvée. Utilisation de la police par défaut.")
         return ImageFont.load_default()
 
 # Fonction pour créer une animation GIF
 def create_probability_animation(sentence, options, selected_word, output_path="animated_choice.gif"):
-    font_sentence = load_font(40)  # Taille de police pour la phrase
-    font_probs = load_font(30)     # Taille de police pour les probabilités
-    font_final = load_font(35)     # Taille de police pour le texte final
+    # Charger les polices avec des tailles plus grandes
+    font_sentence = load_font(60)  # Taille de police pour la phrase
+    font_probs = load_font(40)     # Taille de police pour les probabilités
+    font_final = load_font(50)     # Taille de police pour le texte final
 
     frames = []
 
     # Couleurs
-    background_color = (30, 30, 30)      # Fond sombre
+    background_color = (40, 40, 40)      # Fond sombre
     text_color = (255, 255, 255)         # Texte blanc
     prob_title_color = (255, 215, 0)     # Or pour le titre des probabilités
     prob_text_color = (135, 206, 250)    # Bleu clair pour les probabilités
     final_text_color = (0, 255, 0)       # Vert vif pour le texte final
+
+    # Dimensions de l'image pour mieux accueillir le texte agrandi
+    img_width = 1600
+    img_height = 800
 
     # Étape 1 : Animation aléatoire
     for _ in range(20):  # Nombre de frames pour simuler le défilement rapide
@@ -44,17 +50,17 @@ def create_probability_animation(sentence, options, selected_word, output_path="
         )
 
         # Créer une image pour chaque frame
-        img = Image.new("RGB", (1200, 500), color=background_color)
+        img = Image.new("RGB", (img_width, img_height), color=background_color)
         draw = ImageDraw.Draw(img)
 
         # Afficher la phrase animée
-        draw.text((50, 50), animated_sentence, fill=text_color, font=font_sentence)
+        draw.text((100, 100), animated_sentence, fill=text_color, font=font_sentence)
 
         # Afficher les probabilités des options en bas de l'image
-        draw.text((50, 250), "Options et Probabilités :", fill=prob_title_color, font=font_probs)
+        draw.text((100, 500), "Options et Probabilités :", fill=prob_title_color, font=font_probs)
         for i, opt in enumerate(options):
             prob_text = f"{opt['word']} : {opt['probability']}%"
-            draw.text((70, 300 + i * 40), prob_text, fill=prob_text_color, font=font_probs)
+            draw.text((150, 600 + i * 50), prob_text, fill=prob_text_color, font=font_probs)
 
         frames.append(img)
 
@@ -70,18 +76,18 @@ def create_probability_animation(sentence, options, selected_word, output_path="
     final_text = f"Le mot choisi est : {final_word} ({final_prob}%) !"
 
     for _ in range(30):  # Augmenter le nombre de frames pour une pause plus longue
-        img = Image.new("RGB", (1200, 600), color=background_color)
+        img = Image.new("RGB", (img_width, img_height + 100), color=background_color)
         draw = ImageDraw.Draw(img)
         # Afficher la phrase finale
-        draw.text((50, 50), final_sentence, fill=text_color, font=font_sentence)
+        draw.text((100, 100), final_sentence, fill=text_color, font=font_sentence)
         # Afficher le texte final
-        draw.text((50, 250), final_text, fill=final_text_color, font=font_final)
+        draw.text((100, 300), final_text, fill=final_text_color, font=font_final)
 
         # Afficher les probabilités des options en bas de l'image
-        draw.text((50, 350), "Options et Probabilités :", fill=prob_title_color, font=font_probs)
+        draw.text((100, 500), "Options et Probabilités :", fill=prob_title_color, font=font_probs)
         for i, opt in enumerate(options):
             prob_text = f"{opt['word']} : {opt['probability']}%"
-            draw.text((70, 400 + i * 40), prob_text, fill=prob_text_color, font=font_probs)
+            draw.text((150, 600 + i * 50), prob_text, fill=prob_text_color, font=font_probs)
 
         frames.append(img)
 

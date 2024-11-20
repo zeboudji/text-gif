@@ -3,8 +3,65 @@ import random
 import re
 import time
 
+# Appliquer des styles CSS pour améliorer l'apparence et la réactivité
+def local_css(file_name):
+    with open(file_name) as f:
+        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+
+# Alternative: In-line CSS
+def inline_css():
+    st.markdown("""
+    <style>
+    /* Conteneur principal */
+    .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+    }
+
+    /* Phrase animée */
+    .animated-text {
+        font-size: 2em;
+        color: #ffffff;
+        transition: all 0.5s ease-in-out;
+        text-align: center;
+        word-wrap: break-word;
+    }
+
+    /* Options et probabilités */
+    .probabilities {
+        font-size: 1.2em;
+        color: #87CEFA;
+        margin-top: 20px;
+    }
+
+    /* Texte final */
+    .final-text {
+        font-size: 2.5em;
+        color: #32CD32;
+        margin-top: 30px;
+        text-align: center;
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .animated-text {
+            font-size: 1.5em;
+        }
+        .probabilities {
+            font-size: 1em;
+        }
+        .final-text {
+            font-size: 2em;
+        }
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
 # Fonction pour simuler l'animation dans Streamlit
-def simulate_animation(sentence, options, selected_word, scale_factor=2):
+def simulate_animation(sentence, options, selected_word, scale_factor=1):
     prob_weights = [opt["probability"] for opt in options]
     prob_texts = [f"{opt['word']} : {opt['probability']}%" for opt in options]
     
@@ -19,18 +76,20 @@ def simulate_animation(sentence, options, selected_word, scale_factor=2):
         random_word = chosen_option["word"]
         random_prob = chosen_option["probability"]
         
-        # Créer la phrase animée
-        animated_sentence = sentence.replace(selected_word, f"<span style='color:orange;'>[{random_word} ({random_prob}%)]</span>")
+        # Créer la phrase animée avec des styles HTML
+        animated_sentence = sentence.replace(
+            selected_word, f"<span style='color:#FFA500;'>[{random_word} ({random_prob}%)]</span>"
+        )
         
-        # Afficher la phrase animée avec une taille de police agrandie
-        sentence_html = f"<h2 style='font-size:{30 * scale_factor}px;'>{animated_sentence}</h2>"
+        # Afficher la phrase animée avec une taille de police agrandie et centrée
+        sentence_html = f"<div class='animated-text'>{animated_sentence}</div>"
         sentence_placeholder.markdown(sentence_html, unsafe_allow_html=True)
         
         # Afficher les probabilités des options
-        probs_html = "<h3 style='font-size:{0}px;'>Options et Probabilités :</h3>".format(20 * scale_factor)
-        probs_html += "<ul style='font-size:{0}px;'>".format(18 * scale_factor)
+        probs_html = "<div class='probabilities'>Options et Probabilités :</div>"
+        probs_html += "<ul style='list-style-type: none; padding: 0; text-align: center;'>"
         for prob in prob_texts:
-            probs_html += f"<li style='color:lightblue;'>{prob}</li>"
+            probs_html += f"<li>{prob}</li>"
         probs_html += "</ul>"
         probs_placeholder.markdown(probs_html, unsafe_allow_html=True)
         
@@ -40,22 +99,28 @@ def simulate_animation(sentence, options, selected_word, scale_factor=2):
     final_option = max(options, key=lambda x: x["probability"])
     final_word = final_option["word"]
     final_prob = final_option["probability"]
-    final_sentence = sentence.replace(selected_word, f"<span style='color:green;'>[{final_word} ({final_prob}%)]</span>")
-    final_text = f"<h2 style='font-size:{35 * scale_factor}px; color:green;'>Le mot choisi est : <strong>{final_word} ({final_prob}%)</strong> ! 🎉</h2>"
+    final_sentence = sentence.replace(
+        selected_word, f"<span style='color:#32CD32;'>[{final_word} ({final_prob}%)]</span>"
+    )
+    final_text = f"Le mot choisi est : <strong>{final_word} ({final_prob}%)</strong> ! 🎉"
     
     # Afficher la phrase finale
-    sentence_placeholder.markdown(final_sentence.replace("\n", "<br>"), unsafe_allow_html=True)
+    final_sentence_html = f"<div class='animated-text'>{final_sentence}</div>"
+    sentence_placeholder.markdown(final_sentence_html, unsafe_allow_html=True)
     
     # Afficher le texte final
-    final_placeholder.markdown(final_text, unsafe_allow_html=True)
-    
-    # Optionnel : Afficher les probabilités une dernière fois
-    # probs_placeholder.markdown(probs_html, unsafe_allow_html=True)
+    final_text_html = f"<div class='final-text'>{final_text}</div>"
+    final_placeholder.markdown(final_text_html, unsafe_allow_html=True)
+
+# Appliquer le CSS en ligne
+inline_css()
 
 # Application Streamlit
 st.set_page_config(page_title="Simulation IA : Choix Pondéré", layout="wide")
 st.title("🧠 Simulation IA : Choix Pondéré avec Contexte")
-st.write("Saisissez une phrase, sélectionnez un mot à animer, et attribuez des probabilités pour voir comment l'IA fait son choix !")
+st.write("""
+Saisissez une phrase, sélectionnez un mot à animer, et attribuez des probabilités pour voir comment l'IA fait son choix !
+""")
 
 # Étape 1 : Entrée de la phrase
 sentence = st.text_area(
@@ -69,7 +134,7 @@ if sentence:
     selected_word = st.selectbox("Choisissez un mot à animer :", words)
     
     if selected_word:
-        st.markdown(f"**Vous avez choisi :** `<span style='color:blue;'>{selected_word}</span>`", unsafe_allow_html=True)
+        st.markdown(f"**Vous avez choisi :** `<span style='color:#1E90FF;'>{selected_word}</span>`", unsafe_allow_html=True)
         
         # Étape 3 : Ajouter des options avec leurs probabilités
         st.subheader("Définir les options et leurs probabilités")
@@ -97,7 +162,7 @@ if sentence:
                 if st.button("Générer l'animation"):
                     with st.spinner("Génération de l'animation en cours..."):
                         try:
-                            simulate_animation(sentence, options, selected_word, scale_factor=3)
+                            simulate_animation(sentence, options, selected_word, scale_factor=1)
                             st.success("Animation terminée !")
                         except Exception as e:
                             st.error(f"Une erreur s'est produite lors de l'animation : {e}")

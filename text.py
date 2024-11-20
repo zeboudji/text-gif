@@ -16,9 +16,9 @@ def load_font(font_size):
 
 # Fonction pour créer une animation GIF
 def create_probability_animation(sentence, options, selected_word, output_path="animated_choice.gif"):
-    font_sentence = load_font(40)  # Taille de police pour la phrase
-    font_probs = load_font(30)     # Taille de police pour les probabilités
-    font_final = load_font(35)     # Taille de police pour le texte final
+    font_sentence = load_font(70)  # Taille de police pour la phrase
+    font_probs = load_font(50)     # Taille de police pour les probabilités
+    font_final = load_font(50)     # Taille de police pour le texte final
 
     frames = []
 

@@ -1,16 +1,9 @@
 import streamlit as st
 from PIL import Image, ImageDraw, ImageFont
-import re
 import random
 
-# Fonction pour extraire les options et probabilités d'une phrase
-def extract_options(sentence):
-    matches = re.findall(r"\[(.*?)\((\d+)%\)\]", sentence)
-    options = [{"word": match[0].strip(), "probability": int(match[1])} for match in matches]
-    return options
-
 # Fonction pour créer une animation GIF
-def create_probability_animation(sentence, options, output_path="animated_choice.gif"):
+def create_probability_animation(sentence, options, selected_word, output_path="animated_choice.gif"):
     font = ImageFont.load_default()
     frames = []
 
@@ -19,7 +12,7 @@ def create_probability_animation(sentence, options, output_path="animated_choice
         random_word = random.choices(
             [opt["word"] for opt in options], weights=[opt["probability"] for opt in options]
         )[0]
-        animated_sentence = re.sub(r"\[.*?\]", f"[{random_word}]", sentence)
+        animated_sentence = sentence.replace(selected_word, random_word)
 
         # Créer une image
         img = Image.new("RGB", (800, 200), color=(255, 255, 255))
@@ -35,7 +28,7 @@ def create_probability_animation(sentence, options, output_path="animated_choice
 
     # Étape 2 : Afficher la phrase finale
     final_word = max(options, key=lambda x: x["probability"])["word"]
-    final_sentence = re.sub(r"\[.*?\]", f"[{final_word} ({max(options, key=lambda x: x['probability'])['probability']}%)]", sentence)
+    final_sentence = sentence.replace(selected_word, f"{final_word} ({max(options, key=lambda x: x['probability'])['probability']}%)")
     for _ in range(10):  # 10 frames pour insister sur le résultat final
         img = Image.new("RGB", (800, 200), color=(255, 255, 255))
         draw = ImageDraw.Draw(img)
@@ -54,29 +47,41 @@ def create_probability_animation(sentence, options, output_path="animated_choice
 
 # Streamlit Application
 st.title("Simulation IA : Choix pondéré avec contexte 🧠")
-st.write("Saisissez une phrase avec des options entre crochets, associées à des probabilités, et voyez comment l'IA sélectionne !")
+st.write("Saisissez une phrase, sélectionnez un mot et attribuez des probabilités pour voir comment l'IA fait son choix !")
 
-# Entrée utilisateur
-sentence = st.text_area(
-    "Entrez votre phrase (format : [option (probabilité%)]):",
-    placeholder="Exemple : Toulouse est la ville [rose (50%)][jaune (20%)][chaude (20%)]",
-)
+# Étape 1 : Entrée de la phrase
+sentence = st.text_area("Entrez une phrase :", placeholder="Exemple : Toulouse est la ville rose.")
 
-# Bouton pour générer l'animation
-if st.button("Générer l'animation"):
-    if sentence:
-        # Extraire les options et probabilités
-        options = extract_options(sentence)
+if sentence:
+    # Étape 2 : Sélection d'un mot à animer
+    words = sentence.split()
+    selected_word = st.selectbox("Choisissez un mot à animer :", words)
 
-        if options:
-            # Générer l'animation
-            with st.spinner("Génération en cours..."):
-                gif_path = create_probability_animation(sentence, options)
-            st.success("Animation générée avec succès !")
+    if selected_word:
+        st.write(f"Vous avez choisi : {selected_word}")
 
-            # Afficher l'animation et le résultat final
-            st.image(gif_path, caption="Simulation IA : Processus de choix", use_column_width=True)
+        # Étape 3 : Ajouter des options avec leurs probabilités
+        num_options = st.number_input("Nombre de choix possibles :", min_value=2, max_value=10, value=3)
+        options = []
+        for i in range(num_options):
+            col1, col2 = st.columns([2, 1])
+            with col1:
+                word = st.text_input(f"Option {i + 1} :", placeholder=f"Mot {i + 1}")
+            with col2:
+                prob = st.number_input(f"Probabilité {i + 1} (%) :", min_value=1, max_value=100, value=50)
+
+            if word:
+                options.append({"word": word, "probability": prob})
+
+        # Étape 4 : Validation des probabilités et génération
+        if len(options) > 1 and sum([opt["probability"] for opt in options]) == 100:
+            if st.button("Générer l'animation"):
+                with st.spinner("Génération en cours..."):
+                    gif_path = create_probability_animation(sentence, options, selected_word)
+                st.success("Animation générée avec succès !")
+
+                # Afficher l'animation
+                st.image(gif_path, caption="Simulation IA : Processus de choix", use_column_width=True)
         else:
-            st.error("Aucune option valide trouvée dans la phrase.")
-    else:
-        st.error("Veuillez entrer une phrase valide.")
+            st.error("Assurez-vous que les probabilités totalisent exactement 100%.")
+

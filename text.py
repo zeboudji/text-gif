@@ -3,6 +3,7 @@ from PIL import Image, ImageDraw, ImageFont
 import random
 import re
 from io import BytesIO
+import textwrap
 
 # Fonction pour charger la police par défaut
 def load_font():
@@ -37,34 +38,31 @@ def create_probability_animation(sentence, options, selected_word, output_path="
         img = Image.new("RGB", (base_width, base_height), color=background_color)
         draw = ImageDraw.Draw(img)
 
+        # Envelopper le texte pour qu'il tienne dans l'image
+        wrapped_sentence = textwrap.wrap(animated_sentence, width=40)
+
         # Dessiner la phrase animée
         y_text = 20
-        draw.text((20, y_text), animated_sentence, fill=text_color, font=font_sentence)
-        # Estimer la hauteur du texte
-        text_height = font_sentence.getbbox(animated_sentence)[3] - font_sentence.getbbox(animated_sentence)[1]
-        y_text += text_height + 10
+        for line in wrapped_sentence:
+            draw.text((20, y_text), line, fill=text_color, font=font_sentence)
+            y_text += 15  # Espacement fixe entre les lignes
 
         if not final:
             # Dessiner les probabilités des options
-            draw.text((20, y_text), "Options et Probabilités :", fill=prob_title_color, font=font_probs)
-            y_text += font_probs.getbbox("Options et Probabilités :")[3] - font_probs.getbbox("Options et Probabilités :")[1] + 10
+            draw.text((20, 150), "Options et Probabilités :", fill=prob_title_color, font=font_probs)
+            y_prob = 180
             for prob_text in prob_texts:
-                draw.text((40, y_text), prob_text, fill=prob_text_color, font=font_probs)
-                prob_text_height = font_probs.getbbox(prob_text)[3] - font_probs.getbbox(prob_text)[1]
-                y_text += prob_text_height + 5
+                draw.text((40, y_prob), prob_text, fill=prob_text_color, font=font_probs)
+                y_prob += 15  # Espacement fixe entre les probabilités
         else:
             # Dessiner le texte final
-            draw.text((20, y_text), final_text, fill=final_text_color, font=font_final)
-            final_text_height = font_final.getbbox(final_text)[3] - font_final.getbbox(final_text)[1]
-            y_text += final_text_height + 10
-
+            draw.text((20, 150), final_text, fill=final_text_color, font=font_final)
             # Dessiner les probabilités des options
-            draw.text((20, y_text), "Options et Probabilités :", fill=prob_title_color, font=font_probs)
-            y_text += font_probs.getbbox("Options et Probabilités :")[3] - font_probs.getbbox("Options et Probabilités :")[1] + 10
+            draw.text((20, 180), "Options et Probabilités :", fill=prob_title_color, font=font_probs)
+            y_prob = 210
             for prob_text in prob_texts:
-                draw.text((40, y_text), prob_text, fill=prob_text_color, font=font_probs)
-                prob_text_height = font_probs.getbbox(prob_text)[3] - font_probs.getbbox(prob_text)[1]
-                y_text += prob_text_height + 5
+                draw.text((40, y_prob), prob_text, fill=prob_text_color, font=font_probs)
+                y_prob += 15  # Espacement fixe entre les probabilités
 
         # Redimensionner l'image pour agrandir le texte
         img = img.resize((base_width * scale_factor, base_height * scale_factor), Image.NEAREST)

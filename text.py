@@ -3,14 +3,11 @@ import random
 import re
 import time
 
-# Appliquer des styles CSS pour améliorer l'apparence et la réactivité
-def local_css(file_name):
-    with open(file_name) as f:
-        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+# 1. Configurer la page (doit être le premier appel Streamlit)
+st.set_page_config(page_title="Simulation IA : Choix Pondéré", layout="wide")
 
-# Alternative: In-line CSS
-def inline_css():
-    st.markdown("""
+# 2. Appliquer des styles CSS en ligne pour une apparence moderne et responsive
+st.markdown("""
     <style>
     /* Conteneur principal */
     .container {
@@ -60,7 +57,7 @@ def inline_css():
     </style>
     """, unsafe_allow_html=True)
 
-# Fonction pour simuler l'animation dans Streamlit
+# 3. Fonction pour simuler l'animation dans Streamlit
 def simulate_animation(sentence, options, selected_word, scale_factor=1):
     prob_weights = [opt["probability"] for opt in options]
     prob_texts = [f"{opt['word']} : {opt['probability']}%" for opt in options]
@@ -112,11 +109,7 @@ def simulate_animation(sentence, options, selected_word, scale_factor=1):
     final_text_html = f"<div class='final-text'>{final_text}</div>"
     final_placeholder.markdown(final_text_html, unsafe_allow_html=True)
 
-# Appliquer le CSS en ligne
-inline_css()
-
-# Application Streamlit
-st.set_page_config(page_title="Simulation IA : Choix Pondéré", layout="wide")
+# 4. Interface utilisateur Streamlit
 st.title("🧠 Simulation IA : Choix Pondéré avec Contexte")
 st.write("""
 Saisissez une phrase, sélectionnez un mot à animer, et attribuez des probabilités pour voir comment l'IA fait son choix !

@@ -4,7 +4,7 @@ import re
 import time
 
 # 1. Configurer la page (doit être le premier appel Streamlit)
-st.set_page_config(page_title="Simulation IA : Choix Pondéré", layout="wide")
+st.set_page_config(page_title="🧠 Simulation IA : Choix Pondéré Réaliste", layout="wide")
 
 # 2. Appliquer des styles CSS en ligne pour une apparence moderne et responsive
 st.markdown("""
@@ -51,10 +51,9 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 3. Fonction pour simuler l'animation des étapes de réflexion de l'IA
+# 3. Fonction pour simuler les étapes de réflexion de l'IA
 def simulate_reflection(sentence, options, selected_word):
     prob_weights = [opt["probability"] for opt in options]
-    prob_texts = [f"{opt['word']} : {opt['probability']}%" for opt in options]
     
     # Créer des placeholders pour les étapes
     step1_placeholder = st.empty()
@@ -63,47 +62,58 @@ def simulate_reflection(sentence, options, selected_word):
     step4_placeholder = st.empty()
     final_placeholder = st.empty()
     
-    # Étape 1 : Analyse des options
+    # Étape 1 : Encodage du Contexte
     step1_html = f"""
     <div class='step'>
-        <strong>Étape 1 : Analyse des Options</strong><br>
-        L'IA analyse les options disponibles pour remplacer le mot <em><strong>{selected_word}</strong></em> dans la phrase.
+        <strong>Étape 1 : Encodage du Contexte</strong><br>
+        L'IA analyse la phrase : <em>{sentence}</em><br>
+        Elle identifie le mot cible à remplacer : <strong>{selected_word}</strong>.<br>
+        Grâce aux embeddings et au mécanisme d'attention, l'IA comprend le contexte global de la phrase.
     </div>
     """
     step1_placeholder.markdown(step1_html, unsafe_allow_html=True)
-    time.sleep(2)  # Pause de 2 secondes
-
-    # Étape 2 : Évaluation des Probabilités
+    time.sleep(3)  # Pause de 3 secondes
+    
+    # Étape 2 : Calcul des Probabilités
     step2_html = f"""
     <div class='step'>
-        <strong>Étape 2 : Évaluation des Probabilités</strong><br>
-        Chaque option se voit attribuer une probabilité de sélection basée sur son importance ou sa pertinence.
+        <strong>Étape 2 : Calcul des Probabilités</strong><br>
+        Pour chaque option, l'IA calcule la probabilité qu'elle soit le prochain mot, basée sur les données d'entraînement.<br>
+        Ces probabilités reflètent la pertinence de chaque mot dans le contexte donné.
     </div>
     """
     step2_placeholder.markdown(step2_html, unsafe_allow_html=True)
-    time.sleep(2)  # Pause de 2 secondes
-
-    # Étape 3 : Comparaison des Options
+    
+    # Affichage des probabilités
+    prob_html = "<ul style='list-style-type: none; padding: 0;'>"
+    for opt in options:
+        prob_html += f"<li>{opt['word']} : {opt['probability']}%</li>"
+    prob_html += "</ul>"
+    step2_placeholder.markdown(prob_html, unsafe_allow_html=True)
+    time.sleep(3)  # Pause de 3 secondes
+    
+    # Étape 3 : Sélection Basée sur les Probabilités
     step3_html = f"""
     <div class='step'>
-        <strong>Étape 3 : Comparaison des Options</strong><br>
-        L'IA compare les probabilités attribuées à chaque option pour déterminer laquelle a le plus de chances d'être sélectionnée.
+        <strong>Étape 3 : Sélection Basée sur les Probabilités</strong><br>
+        L'IA utilise un algorithme de sélection pondérée pour choisir le prochain mot.<br>
+        Cela peut être fait en sélectionnant le mot avec la plus haute probabilité ou en échantillonnant selon la distribution des probabilités pour introduire de la diversité.
     </div>
     """
     step3_placeholder.markdown(step3_html, unsafe_allow_html=True)
-    time.sleep(2)  # Pause de 2 secondes
-
+    time.sleep(3)  # Pause de 3 secondes
+    
     # Étape 4 : Prise de Décision
     chosen_option = random.choices(options, weights=prob_weights, k=1)[0]
     step4_html = f"""
     <div class='step'>
         <strong>Étape 4 : Prise de Décision</strong><br>
-        Basé sur les probabilités, l'IA sélectionne l'option <em><strong>{chosen_option['word']}</strong></em> avec une probabilité de <strong>{chosen_option['probability']}%</strong>.
+        L'IA sélectionne l'option <strong>{chosen_option['word']}</strong> avec une probabilité de <strong>{chosen_option['probability']}%</strong>.
     </div>
     """
     step4_placeholder.markdown(step4_html, unsafe_allow_html=True)
-    time.sleep(2)  # Pause de 2 secondes
-
+    time.sleep(3)  # Pause de 3 secondes
+    
     # Résultat Final
     final_sentence = sentence.replace(selected_word, f"<strong>{chosen_option['word']}</strong>")
     final_text_html = f"""
@@ -116,16 +126,21 @@ def simulate_reflection(sentence, options, selected_word):
     final_placeholder.markdown(final_text_html, unsafe_allow_html=True)
 
 # 4. Interface utilisateur Streamlit
-st.title("🧠 Simulation IA : Choix Pondéré avec Contexte")
+st.title("🧠 Simulation IA : Choix Pondéré Réaliste")
+
 st.markdown("""
-### 📚 Introduction à l'IA et aux Probabilités Pondérées
+### 📚 Comprendre le Fonctionnement d'une IA Générative
 
-L'intelligence artificielle (IA) prend souvent des décisions basées sur des **probabilités pondérées**. Cela signifie que chaque option possible se voit attribuer une probabilité, et l'IA choisit parmi ces options en fonction de ces probabilités.
+Les IA génératives, comme GPT, sont conçues pour prédire le prochain mot dans une phrase en se basant sur les mots précédents. Elles utilisent des **probabilités** pour déterminer quel mot est le plus approprié à ajouter à la suite.
 
-**Exemple Simplifié :**
-Imaginez que vous avez trois choix pour le dîner : Pizza (50%), Sushi (30%), et Salade (20%). Une IA utilisant des probabilités pondérées choisirait la Pizza 50% du temps, le Sushi 30% du temps, et la Salade 20% du temps.
+**Comment cela fonctionne-t-il ?**
 
-Cette application interactive vous permet de visualiser comment une IA peut faire de tels choix basés sur des probabilités définies.
+1. **Encodage du Contexte :** L'IA examine les mots déjà présents dans la phrase en utilisant des embeddings et des mécanismes d'attention pour comprendre le contexte global.
+2. **Calcul des Probabilités :** Pour chaque mot possible, l'IA calcule une probabilité basée sur les données d'entraînement. Ces probabilités reflètent la pertinence et la cohérence du mot dans le contexte donné.
+3. **Sélection du Mot :** L'IA choisit le mot avec la probabilité la plus élevée ou sélectionne un mot de manière aléatoire en fonction de ces probabilités pour introduire de la diversité.
+4. **Prise de Décision :** Le mot sélectionné est ajouté à la phrase, et le processus peut se répéter pour les mots suivants.
+
+Cette application interactive vous permet de visualiser comment une IA générative peut faire de tels choix basés sur des probabilités définies.
 """)
 
 # Étape 1 : Entrée de la phrase
@@ -157,7 +172,7 @@ if sentence:
             if word:
                 options.append({"word": word, "probability": prob})
         
-        # Étape 4 : Validation des probabilités et génération
+        # Validation des probabilités
         if len(options) == int(num_options):
             total_prob = sum([opt["probability"] for opt in options])
             if total_prob > 100:

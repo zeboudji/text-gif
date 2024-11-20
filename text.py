@@ -156,7 +156,7 @@ if sentence:
                     with st.spinner("Génération de l'animation en cours..."):
                         try:
                             simulate_animation(sentence, options, selected_word, scale_factor=1)
-                            st.success("Animation terminée !")
+                            st.success("L'IA a fait son choix en fonction du mot le plus probable dans sa base de données, plus la base de données est conséquente plus la reponse sera robuste !")
                         except Exception as e:
                             st.error(f"Une erreur s'est produite lors de l'animation : {e}")
         else:

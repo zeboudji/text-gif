@@ -5,25 +5,21 @@ import re
 import os
 
 # Fonction pour charger une police TTF personnalisée
-def load_font(font_size):
+def load_font(font_path, font_size):
     try:
-        # Téléchargez une police plus esthétique ou utilisez une police système
-        # Ici, j'utilise une police standard pour la simplicité
-        return ImageFont.truetype("arial.ttf", font_size)
+        return ImageFont.truetype(font_path, font_size)
     except IOError:
-        # Fallback à la police par défaut si la police personnalisée n'est pas trouvée
+        st.error(f"Police {font_path} non trouvée. Assurez-vous que le fichier est dans le répertoire.")
         return ImageFont.load_default()
 
 # Fonction pour créer une animation GIF
-def create_probability_animation(sentence, options, selected_word, output_path="animated_choice.gif"):
-    font_sentence = load_font(24)  # Taille de police pour la phrase
-    font_probs = load_font(18)     # Taille de police pour les probabilités
-    font_final = load_font(28)     # Taille de police pour le texte final
+def create_probability_animation(sentence, options, selected_word, font_path="Roboto-Bold.ttf", output_path="animated_choice.gif"):
+    # Charger les polices
+    font_sentence = load_font(font_path, 40)  # Taille de police pour la phrase
+    font_probs = load_font(font_path, 30)     # Taille de police pour les probabilités
+    font_final = load_font(font_path, 35)     # Taille de police pour le texte final
 
     frames = []
-
-    # Calculer la somme des probabilités pour validation
-    total_prob = sum([opt["probability"] for opt in options])
 
     # Étape 1 : Animation aléatoire
     for _ in range(20):  # Nombre de frames pour simuler le défilement rapide
@@ -40,17 +36,30 @@ def create_probability_animation(sentence, options, selected_word, output_path="
         )
 
         # Créer une image pour chaque frame
-        img = Image.new("RGB", (1000, 300), color=(255, 255, 255))
+        img = Image.new("RGB", (1200, 400), color=(30, 30, 30))  # Fond sombre
         draw = ImageDraw.Draw(img)
 
         # Afficher la phrase animée
-        draw.text((50, 50), animated_sentence, fill=(0, 0, 0), font=font_sentence)
+        draw.text((50, 50), animated_sentence, fill=(255, 255, 255), font=font_sentence)
 
         # Afficher les probabilités des options en bas de l'image
-        draw.text((50, 150), "Options et Probabilités :", fill=(0, 0, 0), font=font_probs)
+        draw.text((50, 200), "Options et Probabilités :", fill=(255, 215, 0), font=font_probs)
         for i, opt in enumerate(options):
             prob_text = f"{opt['word']} : {opt['probability']}%"
-            draw.text((70, 180 + i * 30), prob_text, fill=(0, 0, 0), font=font_probs)
+            draw.text((70, 250 + i * 40), prob_text, fill=(135, 206, 250), font=font_probs)
+
+        # Ajouter un encadrement autour du mot animé
+        word_start = animated_sentence.find(f"[{random_word} ({random_prob}%)]")
+        if word_start != -1:
+            # Calculer la position approximative du mot animé
+            x_position = 50 + draw.textlength(animated_sentence[:word_start], font=font_sentence)
+            y_position = 50
+            word_length = draw.textlength(f"[{random_word} ({random_prob}%)]", font=font_sentence)
+            draw.rectangle(
+                [(x_position - 5, y_position - 5), (x_position + word_length + 5, y_position + 50)],
+                outline=(255, 0, 0),
+                width=3
+            )
 
         frames.append(img)
 
@@ -65,19 +74,19 @@ def create_probability_animation(sentence, options, selected_word, output_path="
     # Ajouter un texte supplémentaire pour indiquer le mot choisi
     final_text = f"Le mot choisi est : {final_word} ({final_prob}%) !"
 
-    for _ in range(15):  # 15 frames pour insister sur le résultat final
-        img = Image.new("RGB", (1000, 350), color=(255, 255, 255))
+    for _ in range(30):  # Augmenter le nombre de frames pour une pause plus longue
+        img = Image.new("RGB", (1200, 500), color=(30, 30, 30))  # Fond sombre
         draw = ImageDraw.Draw(img)
         # Afficher la phrase finale
-        draw.text((50, 50), final_sentence, fill=(0, 0, 0), font=font_sentence)
+        draw.text((50, 50), final_sentence, fill=(255, 255, 255), font=font_sentence)
         # Afficher le texte final
-        draw.text((50, 200), final_text, fill=(0, 100, 0), font=font_final)
+        draw.text((50, 200), final_text, fill=(0, 255, 0), font=font_final)
 
         # Afficher les probabilités des options en bas de l'image
-        draw.text((50, 250), "Options et Probabilités :", fill=(0, 0, 0), font=font_probs)
+        draw.text((50, 300), "Options et Probabilités :", fill=(255, 215, 0), font=font_probs)
         for i, opt in enumerate(options):
             prob_text = f"{opt['word']} : {opt['probability']}%"
-            draw.text((70, 280 + i * 30), prob_text, fill=(0, 0, 0), font=font_probs)
+            draw.text((70, 350 + i * 40), prob_text, fill=(135, 206, 250), font=font_probs)
 
         frames.append(img)
 
@@ -93,7 +102,7 @@ def create_probability_animation(sentence, options, selected_word, output_path="
 
 # Application Streamlit
 st.set_page_config(page_title="Simulation IA : Choix Pondéré", layout="wide")
-st.title("Simulation IA : Choix Pondéré avec Contexte 🧠")
+st.title("🧠 Simulation IA : Choix Pondéré avec Contexte")
 st.write("Saisissez une phrase, sélectionnez un mot à animer, et attribuez des probabilités pour voir comment l'IA fait son choix !")
 
 # Étape 1 : Entrée de la phrase
@@ -112,7 +121,7 @@ if sentence:
 
         # Étape 3 : Ajouter des options avec leurs probabilités
         st.subheader("Définir les options et leurs probabilités")
-        num_options = st.number_input("Nombre de choix possibles :", min_value=2, max_value=10, value=3)
+        num_options = st.number_input("Nombre de choix possibles :", min_value=2, max_value=10, value=3, step=1)
         options = []
         for i in range(int(num_options)):
             st.markdown(f"**Option {i + 1}**")
@@ -135,16 +144,18 @@ if sentence:
             else:
                 if st.button("Générer l'animation"):
                     with st.spinner("Génération de l'animation en cours..."):
-                        gif_path = create_probability_animation(sentence, options, selected_word)
-                    st.success("Animation générée avec succès !")
+                        # Vérifier si la police existe
+                        font_path = "Roboto-Bold.ttf"
+                        if not os.path.exists(font_path):
+                            st.error(f"Fichier de police `{font_path}` non trouvé. Veuillez le placer dans le répertoire de l'application.")
+                        else:
+                            gif_path = create_probability_animation(sentence, options, selected_word, font_path=font_path)
+                            st.success("Animation générée avec succès !")
 
-                    # Afficher l'animation
-                    st.image(gif_path, caption="Simulation IA : Processus de choix", use_column_width=True)
+                            # Afficher l'animation
+                            st.image(gif_path, caption="📈 Simulation IA : Processus de choix", use_column_width=True)
 
-                    # Afficher le mot choisi
-                    final_option = max(options, key=lambda x: x["probability"])
-                    st.markdown(f"### Résultat Final : **{final_option['word']} ({final_option['probability']}%)** a été choisi ! 🎉")
-
-        else:
-            st.error("Veuillez remplir toutes les options avec leurs probabilités.")
+                            # Afficher le mot choisi
+                            final_option = max(options, key=lambda x: x["probability"])
+                            st.markdown(f"### 🎉 Résultat Final : **{final_option['word']} ({final_option['probability']}%)** a été choisi !")
 

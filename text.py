@@ -6,34 +6,44 @@ import os
 from io import BytesIO
 import textwrap
 
-# Fonction pour charger une police TTF intégrée ou une police par défaut
-def load_font(font_size):
+# Fonction pour charger une police par défaut avec une taille spécifique
+def load_default_font(font_size):
     try:
-        # DejaVuSans-Bold est généralement disponible avec Pillow
-        return ImageFont.truetype("DejaVuSans-Bold.ttf", font_size)
+        # Utiliser une police truetype intégrée si disponible
+        return ImageFont.truetype("arial.ttf", font_size)
     except IOError:
-        # Fallback à la police par défaut si DejaVuSans-Bold n'est pas disponible
-        st.error("Police DejaVuSans-Bold.ttf non trouvée. Utilisation de la police par défaut.")
+        # Fallback à la police par défaut bitmap
+        st.warning("Police Arial non trouvée. Utilisation de la police par défaut de Pillow.")
         return ImageFont.load_default()
 
 # Fonction pour ajuster la taille de la police en fonction de la largeur maximale
-def get_font_size(text, font_path, max_width, initial_size=60):
+def get_font_and_wrapped_text(text, font_path, max_width, initial_size=60):
     font_size = initial_size
-    font = ImageFont.truetype(font_path, font_size)
+    font = load_default_font(font_size)
+    wrapped_lines = textwrap.wrap(text, width=40)  # Nombre de caractères par ligne
+    
     while True:
-        lines = textwrap.wrap(text, width=40)
-        # Utiliser getlength pour obtenir la largeur du texte
-        line_widths = [font.getlength(line) for line in lines]
+        # Calculer la largeur de chaque ligne
+        line_widths = []
+        for line in wrapped_lines:
+            if isinstance(font, ImageFont.FreeTypeFont):
+                bbox = font.getbbox(line)
+                line_width = bbox[2] - bbox[0]
+            else:
+                # Pour les polices bitmap, utiliser getsize
+                line_width = font.getsize(line)[0]
+            line_widths.append(line_width)
+        
         if max(line_widths) <= max_width or font_size <= 20:
             break
         font_size -= 2
-        font = ImageFont.truetype(font_path, font_size)
-    return font, lines
+        font = load_default_font(font_size)
+    
+    return font, wrapped_lines
 
 # Fonction pour créer une animation GIF avec texte wrapped
 def create_probability_animation(sentence, options, selected_word, output_path="animated_choice.gif"):
     # Charger les polices avec des tailles dynamiques
-    font_path = "DejaVuSans-Bold.ttf"
     initial_font_size_sentence = 60
     initial_font_size_probs = 40
     initial_font_size_final = 50
@@ -65,8 +75,10 @@ def create_probability_animation(sentence, options, selected_word, output_path="
             selected_word, f"[{random_word} ({random_prob}%)]"
         )
 
-        # Ajuster la taille de la police pour la phrase
-        font_sentence, wrapped_sentence = get_font_size(animated_sentence, font_path, img_width - 200, initial_size=60)
+        # Ajuster la taille de la police pour la phrase et envelopper le texte
+        font_sentence, wrapped_sentence = get_font_and_wrapped_text(
+            animated_sentence, "arial.ttf", img_width - 200, initial_size=60
+        )
 
         # Créer une image pour chaque frame
         img = Image.new("RGB", (img_width, img_height), color=background_color)
@@ -79,12 +91,12 @@ def create_probability_animation(sentence, options, selected_word, output_path="
             y_text += font_sentence.getsize(line)[1] + 10  # Espacement entre les lignes
 
         # Afficher les probabilités des options en bas de l'image
-        draw.text((100, 600), "Options et Probabilités :", fill=prob_title_color, font=ImageFont.truetype(font_path, 40))
+        draw.text((100, 600), "Options et Probabilités :", fill=prob_title_color, font=load_default_font(initial_font_size_probs))
         y_prob = 700
         for opt in options:
             prob_text = f"{opt['word']} : {opt['probability']}%"
-            draw.text((150, y_prob), prob_text, fill=prob_text_color, font=ImageFont.truetype(font_path, 40))
-            y_prob += ImageFont.truetype(font_path, 40).getsize(prob_text)[1] + 10
+            draw.text((150, y_prob), prob_text, fill=prob_text_color, font=load_default_font(initial_font_size_probs))
+            y_prob += load_default_font(initial_font_size_probs).getsize(prob_text)[1] + 10
 
         frames.append(img)
 
@@ -98,9 +110,11 @@ def create_probability_animation(sentence, options, selected_word, output_path="
 
     final_text = f"Le mot choisi est : {final_word} ({final_prob}%) !"
 
-    # Ajuster la taille de la police pour la phrase finale
-    font_sentence_final, wrapped_final_sentence = get_font_size(final_sentence, font_path, img_width - 200, initial_size=60)
-    font_final_text = ImageFont.truetype(font_path, 50)
+    # Ajuster la taille de la police pour la phrase finale et envelopper le texte
+    font_sentence_final, wrapped_final_sentence = get_font_and_wrapped_text(
+        final_sentence, "arial.ttf", img_width - 200, initial_size=60
+    )
+    font_final_text = load_default_font(initial_font_size_final)
 
     for _ in range(30):  # Augmenter le nombre de frames pour une pause plus longue
         img = Image.new("RGB", (img_width, img_height + 100), color=background_color)
@@ -116,12 +130,12 @@ def create_probability_animation(sentence, options, selected_word, output_path="
         draw.text((100, 600), final_text, fill=final_text_color, font=font_final_text)
 
         # Afficher les probabilités des options en bas de l'image
-        draw.text((100, 700), "Options et Probabilités :", fill=prob_title_color, font=ImageFont.truetype(font_path, 40))
+        draw.text((100, 700), "Options et Probabilités :", fill=prob_title_color, font=load_default_font(initial_font_size_probs))
         y_prob = 800
         for opt in options:
             prob_text = f"{opt['word']} : {opt['probability']}%"
-            draw.text((150, y_prob), prob_text, fill=prob_text_color, font=ImageFont.truetype(font_path, 40))
-            y_prob += ImageFont.truetype(font_path, 40).getsize(prob_text)[1] + 10
+            draw.text((150, y_prob), prob_text, fill=prob_text_color, font=load_default_font(initial_font_size_probs))
+            y_prob += load_default_font(initial_font_size_probs).getsize(prob_text)[1] + 10
 
         frames.append(img)
 
@@ -184,32 +198,26 @@ if sentence:
             else:
                 if st.button("Générer l'animation"):
                     with st.spinner("Génération de l'animation en cours..."):
-                        # Chemin vers la police
-                        font_path = "DejaVuSans-Bold.ttf"
-                        # Vérifier si la police existe
-                        if not os.path.exists(font_path):
-                            st.error(f"Fichier de police `{font_path}` non trouvé. Assurez-vous que Pillow est correctement installé.")
-                        else:
-                            try:
-                                gif_path = create_probability_animation(sentence, options, selected_word)
-                                st.success("Animation générée avec succès !")
+                        try:
+                            gif_path = create_probability_animation(sentence, options, selected_word)
+                            st.success("Animation générée avec succès !")
 
-                                # Afficher l'animation
-                                st.image(gif_path, caption="📈 Simulation IA : Processus de choix", use_column_width=True)
+                            # Afficher l'animation
+                            st.image(gif_path, caption="📈 Simulation IA : Processus de choix", use_column_width=True)
 
-                                # Afficher le mot choisi
-                                final_option = max(options, key=lambda x: x["probability"])
-                                st.markdown(f"### 🎉 Résultat Final : **{final_option['word']} ({final_option['probability']}%)** a été choisi !")
+                            # Afficher le mot choisi
+                            final_option = max(options, key=lambda x: x["probability"])
+                            st.markdown(f"### 🎉 Résultat Final : **{final_option['word']} ({final_option['probability']}%)** a été choisi !")
 
-                                # Permettre le téléchargement du GIF
-                                gif_bytes = get_gif_bytes(gif_path)
-                                st.download_button(
-                                    label="📥 Télécharger le GIF",
-                                    data=gif_bytes,
-                                    file_name="animated_choice.gif",
-                                    mime="image/gif"
-                                )
-                            except Exception as e:
-                                st.error(f"Une erreur s'est produite lors de la génération du GIF : {e}")
+                            # Permettre le téléchargement du GIF
+                            gif_bytes = get_gif_bytes(gif_path)
+                            st.download_button(
+                                label="📥 Télécharger le GIF",
+                                data=gif_bytes,
+                                file_name="animated_choice.gif",
+                                mime="image/gif"
+                            )
+                        except Exception as e:
+                            st.error(f"Une erreur s'est produite lors de la génération du GIF : {e}")
         else:
             st.error("Veuillez remplir toutes les options avec leurs probabilités.")

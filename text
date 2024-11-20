@@ -1,0 +1,48 @@
+from PIL import Image, ImageDraw, ImageFont
+import random
+
+# Configuration des choix
+choices = [
+    {"word": "Marseille", "probability": 2},
+    {"word": "Paris", "probability": 100},
+    {"word": "Lyon", "probability": 10},
+    {"word": "Bordeaux", "probability": 5},
+    {"word": "Nice", "probability": 3},
+]
+
+# Préparation des mots pour le défilement
+words = [choice["word"] for choice in choices]
+
+# Police pour le texte
+font = ImageFont.load_default()
+
+# Créer les frames pour le GIF
+frames = []
+
+# Étape 1 : Simuler le défilement rapide
+for _ in range(20):  # 20 frames pour le défilement
+    random_word = random.choice(words)  # Choix aléatoire parmi les options
+    text = f"La capitale de la France est [{random_word}] !"
+    
+    # Créer une image pour chaque frame
+    img = Image.new("RGB", (600, 200), color=(255, 255, 255))
+    draw = ImageDraw.Draw(img)
+    draw.text((10, 80), text, fill=(0, 0, 0), font=font)
+    frames.append(img)
+
+# Étape 2 : Afficher le choix final basé sur la probabilité
+most_probable_word = max(choices, key=lambda x: x["probability"])["word"]
+final_text = f"La capitale de la France est [{most_probable_word}] !"
+
+# Ajouter quelques frames avec le choix final
+for _ in range(10):
+    img = Image.new("RGB", (600, 200), color=(255, 255, 255))
+    draw = ImageDraw.Draw(img)
+    draw.text((10, 80), final_text, fill=(0, 0, 0), font=font)
+    frames.append(img)
+
+# Sauvegarder le GIF
+gif_path = "/mnt/data/ia_word_final_roulette.gif"
+frames[0].save(gif_path, save_all=True, append_images=frames[1:], duration=100, loop=0)
+
+gif_path

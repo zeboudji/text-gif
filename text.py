@@ -2,23 +2,18 @@ import streamlit as st
 from PIL import Image, ImageDraw, ImageFont
 import random
 import re
-import os
 from io import BytesIO
 
-# Fonction pour charger une police TTF personnalisée ou une police par défaut
-def load_font(font_size):
-    try:
-        # Utiliser une police système courante comme Arial
-        return ImageFont.truetype("arial.ttf", font_size)
-    except IOError:
-        # Fallback à la police par défaut si Arial n'est pas disponible
-        return ImageFont.load_default()
+# Fonction pour charger la police par défaut avec une taille spécifique
+def load_default_font(font_size):
+    return ImageFont.load_default()
 
-# Fonction pour créer une animation GIF
+# Fonction pour créer une animation GIF avec texte agrandi via redimensionnement
 def create_probability_animation(sentence, options, selected_word, output_path="animated_choice.gif"):
-    font_sentence = load_font(150)  # Taille de police pour la phrase
-    font_probs = load_font(100)     # Taille de police pour les probabilités
-    font_final = load_font(100)     # Taille de police pour le texte final
+    # Charger les polices avec des tailles agrandies (dans ce cas, la taille est fixe)
+    font_sentence = load_default_font(15)  # Taille initiale petite
+    font_probs = load_default_font(10)     # Taille initiale petite
+    font_final = load_default_font(12)     # Taille initiale petite
 
     frames = []
 
@@ -28,6 +23,47 @@ def create_probability_animation(sentence, options, selected_word, output_path="
     prob_title_color = (255, 215, 0)     # Or pour le titre des probabilités
     prob_text_color = (135, 206, 250)    # Bleu clair pour les probabilités
     final_text_color = (0, 255, 0)       # Vert vif pour le texte final
+
+    # Facteur de redimensionnement
+    scale_factor = 2  # Agrandir par un facteur de 2
+
+    # Dimensions de base (plus petite)
+    base_width = 600
+    base_height = 250
+
+    # Fonction pour créer et redimensionner une image
+    def create_frame(animated_sentence, prob_texts, final=False, final_text=""):
+        # Créer une image plus petite
+        img = Image.new("RGB", (base_width, base_height), color=background_color)
+        draw = ImageDraw.Draw(img)
+
+        # Dessiner la phrase animée
+        y_text = 20
+        draw.text((20, y_text), animated_sentence, fill=text_color, font=font_sentence)
+        y_text += font_sentence.getsize(animated_sentence)[1] + 10
+
+        if not final:
+            # Dessiner les probabilités des options
+            draw.text((20, y_text), "Options et Probabilités :", fill=prob_title_color, font=font_probs)
+            y_text += font_probs.getsize("Options et Probabilités :")[1] + 10
+            for prob_text in prob_texts:
+                draw.text((40, y_text), prob_text, fill=prob_text_color, font=font_probs)
+                y_text += font_probs.getsize(prob_text)[1] + 5
+        else:
+            # Dessiner le texte final
+            draw.text((20, y_text), final_text, fill=final_text_color, font=font_final)
+            y_text += font_final.getsize(final_text)[1] + 10
+
+            # Dessiner les probabilités des options
+            draw.text((20, y_text), "Options et Probabilités :", fill=prob_title_color, font=font_probs)
+            y_text += font_probs.getsize("Options et Probabilités :")[1] + 10
+            for prob_text in prob_texts:
+                draw.text((40, y_text), prob_text, fill=prob_text_color, font=font_probs)
+                y_text += font_probs.getsize(prob_text)[1] + 5
+
+        # Redimensionner l'image pour agrandir le texte
+        img = img.resize((base_width * scale_factor, base_height * scale_factor), Image.NEAREST)
+        return img
 
     # Étape 1 : Animation aléatoire
     for _ in range(20):  # Nombre de frames pour simuler le défilement rapide
@@ -43,20 +79,12 @@ def create_probability_animation(sentence, options, selected_word, output_path="
             selected_word, f"[{random_word} ({random_prob}%)]"
         )
 
-        # Créer une image pour chaque frame
-        img = Image.new("RGB", (1200, 500), color=background_color)
-        draw = ImageDraw.Draw(img)
+        # Préparer les textes des probabilités
+        prob_texts = [f"{opt['word']} : {opt['probability']}%" for opt in options]
 
-        # Afficher la phrase animée
-        draw.text((50, 50), animated_sentence, fill=text_color, font=font_sentence)
-
-        # Afficher les probabilités des options en bas de l'image
-        draw.text((50, 250), "Options et Probabilités :", fill=prob_title_color, font=font_probs)
-        for i, opt in enumerate(options):
-            prob_text = f"{opt['word']} : {opt['probability']}%"
-            draw.text((70, 300 + i * 40), prob_text, fill=prob_text_color, font=font_probs)
-
-        frames.append(img)
+        # Créer et ajouter le frame
+        frame = create_frame(animated_sentence, prob_texts)
+        frames.append(frame)
 
     # Étape 2 : Afficher la phrase finale avec le mot ayant la plus grande probabilité
     final_option = max(options, key=lambda x: x["probability"])
@@ -69,21 +97,12 @@ def create_probability_animation(sentence, options, selected_word, output_path="
     # Ajouter un texte supplémentaire pour indiquer le mot choisi
     final_text = f"Le mot choisi est : {final_word} ({final_prob}%) !"
 
+    # Préparer les textes des probabilités
+    prob_texts = [f"{opt['word']} : {opt['probability']}%" for opt in options]
+
     for _ in range(30):  # Augmenter le nombre de frames pour une pause plus longue
-        img = Image.new("RGB", (1200, 600), color=background_color)
-        draw = ImageDraw.Draw(img)
-        # Afficher la phrase finale
-        draw.text((50, 50), final_sentence, fill=text_color, font=font_sentence)
-        # Afficher le texte final
-        draw.text((50, 250), final_text, fill=final_text_color, font=font_final)
-
-        # Afficher les probabilités des options en bas de l'image
-        draw.text((50, 350), "Options et Probabilités :", fill=prob_title_color, font=font_probs)
-        for i, opt in enumerate(options):
-            prob_text = f"{opt['word']} : {opt['probability']}%"
-            draw.text((70, 400 + i * 40), prob_text, fill=prob_text_color, font=font_probs)
-
-        frames.append(img)
+        frame = create_frame(final_sentence, prob_texts, final=True, final_text=final_text)
+        frames.append(frame)
 
     # Sauvegarder l'animation avec une durée de 500 ms par frame pour une vitesse modérée
     frames[0].save(
@@ -117,7 +136,7 @@ if sentence:
     selected_word = st.selectbox("Choisissez un mot à animer :", words)
 
     if selected_word:
-        st.markdown(f"**Vous avez choisi :** {selected_word}")
+        st.markdown(f"**Vous avez choisi :** `{selected_word}`")
 
         # Étape 3 : Ajouter des options avec leurs probabilités
         st.subheader("Définir les options et leurs probabilités")
@@ -144,23 +163,26 @@ if sentence:
             else:
                 if st.button("Générer l'animation"):
                     with st.spinner("Génération de l'animation en cours..."):
-                        gif_path = create_probability_animation(sentence, options, selected_word)
-                        st.success("Animation générée avec succès !")
+                        try:
+                            gif_path = create_probability_animation(sentence, options, selected_word)
+                            st.success("Animation générée avec succès !")
 
-                        # Afficher l'animation
-                        st.image(gif_path, caption="📈 Simulation IA : Processus de choix", use_column_width=True)
+                            # Afficher l'animation
+                            st.image(gif_path, caption="📈 Simulation IA : Processus de choix", use_column_width=True)
 
-                        # Afficher le mot choisi
-                        final_option = max(options, key=lambda x: x["probability"])
-                        st.markdown(f"### 🎉 Résultat Final : **{final_option['word']} ({final_option['probability']}%)** a été choisi !")
+                            # Afficher le mot choisi
+                            final_option = max(options, key=lambda x: x["probability"])
+                            st.markdown(f"### 🎉 Résultat Final : **{final_option['word']} ({final_option['probability']}%)** a été choisi !")
 
-                        # Permettre le téléchargement du GIF
-                        gif_bytes = get_gif_bytes(gif_path)
-                        st.download_button(
-                            label="📥 Télécharger le GIF",
-                            data=gif_bytes,
-                            file_name="animated_choice.gif",
-                            mime="image/gif"
-                        )
+                            # Permettre le téléchargement du GIF
+                            gif_bytes = get_gif_bytes(gif_path)
+                            st.download_button(
+                                label="📥 Télécharger le GIF",
+                                data=gif_bytes,
+                                file_name="animated_choice.gif",
+                                mime="image/gif"
+                            )
+                        except Exception as e:
+                            st.error(f"Une erreur s'est produite lors de la génération du GIF : {e}")
         else:
             st.error("Veuillez remplir toutes les options avec leurs probabilités.")

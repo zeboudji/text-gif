@@ -1,48 +1,51 @@
+import streamlit as st
 from PIL import Image, ImageDraw, ImageFont
 import random
 
-# Configuration des choix
-choices = [
-    {"word": "Marseille", "probability": 2},
-    {"word": "Paris", "probability": 100},
-    {"word": "Lyon", "probability": 10},
-    {"word": "Bordeaux", "probability": 5},
-    {"word": "Nice", "probability": 3},
-]
+# Fonction pour créer un GIF animé
+def create_animated_gif(selected_word, percentage, output_path="animated_word.gif"):
+    # Configuration
+    font = ImageFont.load_default()
+    frames = []
 
-# Préparation des mots pour le défilement
-words = [choice["word"] for choice in choices]
+    # Étape 1 : Animer rapidement avec des mots aléatoires
+    for _ in range(20):  # Nombre de frames pour le défilement
+        text = f"Votre mot sélectionné est [{selected_word if random.randint(1, 100) <= percentage else '...'}]"
+        img = Image.new("RGB", (600, 200), color=(255, 255, 255))
+        draw = ImageDraw.Draw(img)
+        draw.text((10, 80), text, fill=(0, 0, 0), font=font)
+        frames.append(img)
 
-# Police pour le texte
-font = ImageFont.load_default()
+    # Étape 2 : Focus sur le mot final
+    final_text = f"Votre mot sélectionné est [{selected_word}] !"
+    for _ in range(10):
+        img = Image.new("RGB", (600, 200), color=(255, 255, 255))
+        draw = ImageDraw.Draw(img)
+        draw.text((10, 80), final_text, fill=(0, 0, 0), font=font)
+        frames.append(img)
 
-# Créer les frames pour le GIF
-frames = []
+    # Sauvegarder le GIF
+    frames[0].save(output_path, save_all=True, append_images=frames[1:], duration=100, loop=0)
+    return output_path
 
-# Étape 1 : Simuler le défilement rapide
-for _ in range(20):  # 20 frames pour le défilement
-    random_word = random.choice(words)  # Choix aléatoire parmi les options
-    text = f"La capitale de la France est [{random_word}] !"
-    
-    # Créer une image pour chaque frame
-    img = Image.new("RGB", (600, 200), color=(255, 255, 255))
-    draw = ImageDraw.Draw(img)
-    draw.text((10, 80), text, fill=(0, 0, 0), font=font)
-    frames.append(img)
+# Streamlit Application
+st.title("Animation de mots avec Streamlit 🎥")
+st.write("Saisissez un texte, choisissez un mot, attribuez un pourcentage, et voyez le résultat !")
 
-# Étape 2 : Afficher le choix final basé sur la probabilité
-most_probable_word = max(choices, key=lambda x: x["probability"])["word"]
-final_text = f"La capitale de la France est [{most_probable_word}] !"
+# Étape 1 : Saisie du texte
+user_text = st.text_area("Entrez un texte :", placeholder="Exemple : Marseille Paris Lyon Bordeaux Nice")
+if user_text:
+    words = user_text.split()
+    # Étape 2 : Sélection d'un mot
+    selected_word = st.selectbox("Choisissez un mot à animer :", words)
 
-# Ajouter quelques frames avec le choix final
-for _ in range(10):
-    img = Image.new("RGB", (600, 200), color=(255, 255, 255))
-    draw = ImageDraw.Draw(img)
-    draw.text((10, 80), final_text, fill=(0, 0, 0), font=font)
-    frames.append(img)
+    # Étape 3 : Choix du pourcentage
+    percentage = st.slider("Pourcentage d'apparition du mot :", min_value=1, max_value=100, value=50)
 
-# Sauvegarder le GIF
-gif_path = "/mnt/data/ia_word_final_roulette.gif"
-frames[0].save(gif_path, save_all=True, append_images=frames[1:], duration=100, loop=0)
+    # Étape 4 : Bouton pour générer l'animation
+    if st.button("Générer l'animation"):
+        with st.spinner("Génération en cours..."):
+            gif_path = create_animated_gif(selected_word, percentage)
+        st.success("GIF généré avec succès !")
+        st.image(gif_path, caption="Animation de votre mot", use_column_width=True)
 
-gif_path

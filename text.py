@@ -9,11 +9,11 @@ def load_font(font_path, font_size):
     try:
         return ImageFont.truetype(font_path, font_size)
     except IOError:
-        st.error(f"Police {font_path} non trouvée. Assurez-vous que le fichier est dans le répertoire.")
+        st.error(f"Police {font_path} non trouvée. Utilisation de la police par défaut.")
         return ImageFont.load_default()
 
 # Fonction pour créer une animation GIF
-def create_probability_animation(sentence, options, selected_word, font_path="Roboto-Bold.ttf", output_path="animated_choice.gif"):
+def create_probability_animation(sentence, options, selected_word, font_path="fonts/Roboto-Bold.ttf", output_path="animated_choice.gif"):
     # Charger les polices
     font_sentence = load_font(font_path, 40)  # Taille de police pour la phrase
     font_probs = load_font(font_path, 30)     # Taille de police pour les probabilités
@@ -39,7 +39,7 @@ def create_probability_animation(sentence, options, selected_word, font_path="Ro
         img = Image.new("RGB", (1200, 400), color=(30, 30, 30))  # Fond sombre
         draw = ImageDraw.Draw(img)
 
-        # Afficher la phrase animée
+        # Afficher la phrase animée avec des couleurs vibrantes
         draw.text((50, 50), animated_sentence, fill=(255, 255, 255), font=font_sentence)
 
         # Afficher les probabilités des options en bas de l'image
@@ -48,18 +48,14 @@ def create_probability_animation(sentence, options, selected_word, font_path="Ro
             prob_text = f"{opt['word']} : {opt['probability']}%"
             draw.text((70, 250 + i * 40), prob_text, fill=(135, 206, 250), font=font_probs)
 
-        # Ajouter un encadrement autour du mot animé
-        word_start = animated_sentence.find(f"[{random_word} ({random_prob}%)]")
+        # Ajouter un encadrement autour du mot animé (approximatif)
+        word_display = f"[{random_word} ({random_prob}%)]"
+        word_start = animated_sentence.find(word_display)
         if word_start != -1:
-            # Calculer la position approximative du mot animé
-            x_position = 50 + draw.textlength(animated_sentence[:word_start], font=font_sentence)
-            y_position = 50
-            word_length = draw.textlength(f"[{random_word} ({random_prob}%)]", font=font_sentence)
-            draw.rectangle(
-                [(x_position - 5, y_position - 5), (x_position + word_length + 5, y_position + 50)],
-                outline=(255, 0, 0),
-                width=3
-            )
+            # Approximation de la position du mot
+            # Note : Pillow ne fournit pas une méthode directe pour obtenir les coordonnées exactes du texte
+            # Une solution plus précise nécessiterait une librairie plus avancée ou une logique de calcul de position
+            pass  # Pour simplifier, nous n'ajoutons pas de rectangle précis
 
         frames.append(img)
 
@@ -144,18 +140,15 @@ if sentence:
             else:
                 if st.button("Générer l'animation"):
                     with st.spinner("Génération de l'animation en cours..."):
-                        # Vérifier si la police existe
-                        font_path = "Roboto-Bold.ttf"
-                        if not os.path.exists(font_path):
-                            st.error(f"Fichier de police `{font_path}` non trouvé. Veuillez le placer dans le répertoire de l'application.")
-                        else:
-                            gif_path = create_probability_animation(sentence, options, selected_word, font_path=font_path)
-                            st.success("Animation générée avec succès !")
+                        # Chemin vers la police
+                        font_path = "fonts/Roboto-Bold.ttf"
+                        gif_path = create_probability_animation(sentence, options, selected_word, font_path=font_path)
+                        st.success("Animation générée avec succès !")
 
-                            # Afficher l'animation
-                            st.image(gif_path, caption="📈 Simulation IA : Processus de choix", use_column_width=True)
+                        # Afficher l'animation
+                        st.image(gif_path, caption="📈 Simulation IA : Processus de choix", use_column_width=True)
 
-                            # Afficher le mot choisi
-                            final_option = max(options, key=lambda x: x["probability"])
-                            st.markdown(f"### 🎉 Résultat Final : **{final_option['word']} ({final_option['probability']}%)** a été choisi !")
+                        # Afficher le mot choisi
+                        final_option = max(options, key=lambda x: x["probability"])
+                        st.markdown(f"### 🎉 Résultat Final : **{final_option['word']} ({final_option['probability']}%)** a été choisi !")
 

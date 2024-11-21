@@ -41,14 +41,14 @@ st.markdown("""
     /* Animation pour la phrase */
     .animated-sentence {
         font-size: 1.8em;
-        color: #333333;
+        color: #FFFFFF; /* Changement de #333333 à blanc */
         margin-top: 30px;
         transition: color 0.5s, background-color 0.5s;
     }
 
     .highlight {
-        color: #FFA500;
-        background-color: #FFFACD;
+        color: #000000; /* Texte noir pour contraste */
+        background-color: #FFA500; /* Fond orange */
         padding: 2px 4px;
         border-radius: 4px;
         transition: all 0.5s ease-in-out;

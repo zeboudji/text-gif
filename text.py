@@ -20,95 +20,48 @@ st.markdown("""
 
     /* Étapes de réflexion */
     .step {
-        font-size: 1.2em;
+        font-size: 1.5em;
         color: #ffffff;
         background-color: #2F4F4F;
         padding: 15px;
         border-radius: 10px;
         margin-top: 20px;
         width: 80%;
-        opacity: 0;
-        transform: translateY(-20px);
-        transition: opacity 1s ease-in-out, transform 1s ease-in-out;
-    }
-
-    /* Affichage visible */
-    .visible {
-        opacity: 1;
-        transform: translateY(0);
+        transition: all 0.5s ease-in-out;
     }
 
     /* Texte final */
     .final-text {
-        font-size: 2em;
+        font-size: 2.5em;
         color: #32CD32;
         margin-top: 30px;
         text-align: center;
     }
 
-    /* Animation pour la phrase */
-    .animated-sentence {
-        font-size: 1.8em;
-        color: #333333;
-        margin-top: 30px;
-        transition: color 0.5s, background-color 0.5s;
-    }
-
-    .highlight {
-        color: #FFA500;
-        background-color: #FFFACD;
-        padding: 2px 4px;
-        border-radius: 4px;
-        transition: all 0.5s ease-in-out;
-    }
-
     /* Responsive design */
     @media (max-width: 768px) {
         .step {
-            font-size: 1em;
+            font-size: 1.2em;
             width: 95%;
         }
         .final-text {
-            font-size: 1.5em;
-        }
-        .animated-sentence {
-            font-size: 1.5em;
+            font-size: 2em;
         }
     }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. Fonction pour simuler les étapes de réflexion de l'IA et animer la phrase
+# 3. Fonction pour simuler les étapes de réflexion de l'IA
 def simulate_reflection(sentence, options, selected_word):
     prob_weights = [opt["probability"] for opt in options]
-
-    # Créer des placeholders pour la phrase et les étapes
-    sentence_placeholder = st.empty()
+    
+    # Créer des placeholders pour les étapes
     step1_placeholder = st.empty()
     step2_placeholder = st.empty()
     step3_placeholder = st.empty()
     step4_placeholder = st.empty()
     final_placeholder = st.empty()
-
-    # Initialiser la phrase sans animation
-    sentence_html = f"""
-    <div class='animated-sentence'>
-        {sentence}
-    </div>
-    """
-    sentence_placeholder.markdown(sentence_html, unsafe_allow_html=True)
-    time.sleep(1)  # Pause initiale
-
-    # Fonction pour animer le mot sélectionné dans la phrase
-    def highlight_word(sentence, word, animation_delay=1):
-        highlighted = re.sub(f"\\b{re.escape(word)}\\b", f"<span class='highlight'>{word}</span>", sentence)
-        sentence_placeholder.markdown(f"""
-            <div class='animated-sentence'>
-                {highlighted}
-            </div>
-        """, unsafe_allow_html=True)
-        time.sleep(animation_delay)
-
+    
     # Étape 1 : Encodage du Contexte
     step1_html = f"""
     <div class='step'>
@@ -119,19 +72,8 @@ def simulate_reflection(sentence, options, selected_word):
     </div>
     """
     step1_placeholder.markdown(step1_html, unsafe_allow_html=True)
-    # Ajouter la classe 'visible' via JavaScript après un court délai
-    step1_placeholder.markdown(f"""
-        <script>
-        setTimeout(function() {{
-            const elements = document.getElementsByClassName('step');
-            for (let el of elements) {{
-                el.classList.add('visible');
-            }}
-        }}, 500);
-        </script>
-        """, unsafe_allow_html=True)
-    time.sleep(1.5)  # Pause après l'étape 1
-
+    time.sleep(3)  # Pause de 3 secondes
+    
     # Étape 2 : Calcul des Probabilités
     step2_html = f"""
     <div class='step'>
@@ -141,41 +83,15 @@ def simulate_reflection(sentence, options, selected_word):
     </div>
     """
     step2_placeholder.markdown(step2_html, unsafe_allow_html=True)
-    # Ajouter la classe 'visible' via JavaScript après un court délai
-    step2_placeholder.markdown(f"""
-        <script>
-        setTimeout(function() {{
-            const elements = document.getElementsByClassName('step');
-            for (let el of elements) {{
-                el.classList.add('visible');
-            }}
-        }}, 500);
-        </script>
-        """, unsafe_allow_html=True)
-    time.sleep(1.5)  # Pause avant l'animation des options
-
-    # Affichage des probabilités avec animation
+    
+    # Affichage des probabilités
+    prob_html = "<ul style='list-style-type: none; padding: 0;'>"
     for opt in options:
-        prob_html = f"""
-        <div class='step'>
-            <strong>Option : {opt['word']} </strong><br>
-            Probabilité : {opt['probability']}%
-        </div>
-        """
-        step2_placeholder.markdown(prob_html, unsafe_allow_html=True)
-        # Ajouter la classe 'visible' via JavaScript après un court délai
-        step2_placeholder.markdown(f"""
-            <script>
-            setTimeout(function() {{
-                const elements = document.getElementsByClassName('step');
-                for (let el of elements) {{
-                    el.classList.add('visible');
-                }}
-            }}, 500);
-            </script>
-            """, unsafe_allow_html=True)
-        time.sleep(1)  # Pause entre chaque option
-
+        prob_html += f"<li>{opt['word']} : {opt['probability']}%</li>"
+    prob_html += "</ul>"
+    step2_placeholder.markdown(prob_html, unsafe_allow_html=True)
+    time.sleep(3)  # Pause de 3 secondes
+    
     # Étape 3 : Sélection Basée sur les Probabilités
     step3_html = f"""
     <div class='step'>
@@ -185,19 +101,8 @@ def simulate_reflection(sentence, options, selected_word):
     </div>
     """
     step3_placeholder.markdown(step3_html, unsafe_allow_html=True)
-    # Ajouter la classe 'visible' via JavaScript après un court délai
-    step3_placeholder.markdown(f"""
-        <script>
-        setTimeout(function() {{
-            const elements = document.getElementsByClassName('step');
-            for (let el of elements) {{
-                el.classList.add('visible');
-            }}
-        }}, 500);
-        </script>
-        """, unsafe_allow_html=True)
-    time.sleep(1.5)  # Pause après l'étape 3
-
+    time.sleep(3)  # Pause de 3 secondes
+    
     # Étape 4 : Prise de Décision
     chosen_option = random.choices(options, weights=prob_weights, k=1)[0]
     step4_html = f"""
@@ -207,22 +112,8 @@ def simulate_reflection(sentence, options, selected_word):
     </div>
     """
     step4_placeholder.markdown(step4_html, unsafe_allow_html=True)
-    # Ajouter la classe 'visible' via JavaScript après un court délai
-    step4_placeholder.markdown(f"""
-        <script>
-        setTimeout(function() {{
-            const elements = document.getElementsByClassName('step');
-            for (let el of elements) {{
-                el.classList.add('visible');
-            }}
-        }}, 500);
-        </script>
-        """, unsafe_allow_html=True)
-    time.sleep(1.5)  # Pause avant de mettre à jour la phrase
-
-    # Animer le mot sélectionné dans la phrase
-    highlight_word(sentence, chosen_option['word'], animation_delay=1.5)
-
+    time.sleep(3)  # Pause de 3 secondes
+    
     # Résultat Final
     final_sentence = sentence.replace(selected_word, f"<strong>{chosen_option['word']}</strong>")
     final_text_html = f"""
@@ -233,7 +124,6 @@ def simulate_reflection(sentence, options, selected_word):
     </div>
     """
     final_placeholder.markdown(final_text_html, unsafe_allow_html=True)
-    time.sleep(1)  # Pause finale
 
 # 4. Interface utilisateur Streamlit
 st.title("🧠 Simulation IA : Choix Pondéré Réaliste")

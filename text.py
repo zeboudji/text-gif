@@ -27,7 +27,15 @@ st.markdown("""
         border-radius: 10px;
         margin-top: 20px;
         width: 80%;
-        transition: all 0.5s ease-in-out;
+        opacity: 0;
+        transform: translateY(-20px);
+        transition: opacity 1s ease-in-out, transform 1s ease-in-out;
+    }
+
+    /* Affichage visible */
+    .visible {
+        opacity: 1;
+        transform: translateY(0);
     }
 
     /* Texte final */
@@ -36,6 +44,22 @@ st.markdown("""
         color: #32CD32;
         margin-top: 30px;
         text-align: center;
+    }
+
+    /* Animation pour la phrase */
+    .animated-sentence {
+        font-size: 1.8em;
+        color: #333333;
+        margin-top: 30px;
+        transition: color 1s, background-color 1s;
+    }
+
+    .highlight {
+        color: #FFA500;
+        background-color: #FFFACD;
+        padding: 2px 4px;
+        border-radius: 4px;
+        transition: all 0.5s ease-in-out;
     }
 
     /* Responsive design */
@@ -47,21 +71,44 @@ st.markdown("""
         .final-text {
             font-size: 2em;
         }
+        .animated-sentence {
+            font-size: 1.5em;
+        }
     }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. Fonction pour simuler les étapes de réflexion de l'IA
+# 3. Fonction pour simuler les étapes de réflexion de l'IA et animer la phrase
 def simulate_reflection(sentence, options, selected_word):
     prob_weights = [opt["probability"] for opt in options]
-    
-    # Créer des placeholders pour les étapes
+
+    # Créer des placeholders pour la phrase et les étapes
+    sentence_placeholder = st.empty()
     step1_placeholder = st.empty()
     step2_placeholder = st.empty()
     step3_placeholder = st.empty()
     step4_placeholder = st.empty()
     final_placeholder = st.empty()
-    
+
+    # Initialiser la phrase sans animation
+    sentence_html = f"""
+    <div class='animated-sentence'>
+        {sentence}
+    </div>
+    """
+    sentence_placeholder.markdown(sentence_html, unsafe_allow_html=True)
+    time.sleep(1)  # Pause initiale
+
+    # Fonction pour animer le mot sélectionné dans la phrase
+    def highlight_word(sentence, word, animation_delay=1):
+        highlighted = re.sub(f"\\b{re.escape(word)}\\b", f"<span class='highlight'>{word}</span>", sentence)
+        sentence_placeholder.markdown(f"""
+            <div class='animated-sentence'>
+                {highlighted}
+            </div>
+        """, unsafe_allow_html=True)
+        time.sleep(animation_delay)
+
     # Étape 1 : Encodage du Contexte
     step1_html = f"""
     <div class='step'>
@@ -72,8 +119,9 @@ def simulate_reflection(sentence, options, selected_word):
     </div>
     """
     step1_placeholder.markdown(step1_html, unsafe_allow_html=True)
-    time.sleep(3)  # Pause de 3 secondes
-    
+    highlight_word(sentence, selected_word)
+    time.sleep(2)  # Pause après l'étape 1
+
     # Étape 2 : Calcul des Probabilités
     step2_html = f"""
     <div class='step'>
@@ -90,8 +138,8 @@ def simulate_reflection(sentence, options, selected_word):
         prob_html += f"<li>{opt['word']} : {opt['probability']}%</li>"
     prob_html += "</ul>"
     step2_placeholder.markdown(prob_html, unsafe_allow_html=True)
-    time.sleep(3)  # Pause de 3 secondes
-    
+    time.sleep(2)  # Pause après l'étape 2
+
     # Étape 3 : Sélection Basée sur les Probabilités
     step3_html = f"""
     <div class='step'>
@@ -101,8 +149,8 @@ def simulate_reflection(sentence, options, selected_word):
     </div>
     """
     step3_placeholder.markdown(step3_html, unsafe_allow_html=True)
-    time.sleep(3)  # Pause de 3 secondes
-    
+    time.sleep(1)  # Petite pause avant la sélection
+
     # Étape 4 : Prise de Décision
     chosen_option = random.choices(options, weights=prob_weights, k=1)[0]
     step4_html = f"""
@@ -112,8 +160,9 @@ def simulate_reflection(sentence, options, selected_word):
     </div>
     """
     step4_placeholder.markdown(step4_html, unsafe_allow_html=True)
-    time.sleep(3)  # Pause de 3 secondes
-    
+    highlight_word(sentence, chosen_option['word'])
+    time.sleep(2)  # Pause après l'étape 4
+
     # Résultat Final
     final_sentence = sentence.replace(selected_word, f"<strong>{chosen_option['word']}</strong>")
     final_text_html = f"""
